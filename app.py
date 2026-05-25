@@ -28,7 +28,7 @@ conn = None
 cur = None
 
 try:
-    DATABASE_URL = "postgresql://loanpredictiondb_user:yvZHr9wcYQaQ3hpDPl3KbC7Oo8mavjnQ@dpg-d8a28o4m0tmc739n1sc0-a.singapore-postgres.render.com/loanpredictiondb""
+    DATABASE_URL = "postgresql://loanpredictiondb_user:yvZHr9wcYQaQ3hpDPl3KbC7Oo8mavjnQ@dpg-d8a28o4m0tmc739n1sc0-a.singapore-postgres.render.com/loanpredictiondb"
 
     conn = psycopg2.connect(DATABASE_URL)
 
