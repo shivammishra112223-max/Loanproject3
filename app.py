@@ -28,17 +28,16 @@ conn = None
 cur = None
 
 try:
+    DATABASE_URL = "postgresql://loanpredictiondb_user:shivam%8320@dpg-d8a28o4m0tmc739n1sc0-a/loanpredictiondb"
 
-    conn = psycopg2.connect(
-        host="localhost",
-        database="LoanPridiction",
-        user="postgres",
-        password="shivam%8320"
-    )
+    conn = psycopg2.connect(DATABASE_URL)
 
     cur = conn.cursor()
 
     print("✅ Database Connected Successfully")
+    
+    
+    cur = conn.cursor()
 
 except Exception as e:
 
