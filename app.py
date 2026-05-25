@@ -242,7 +242,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
     
-    print("hello shivam")
-    print("shubham")
-    print("welcome to system of github ")
-    print("hello shivam ")
+    
