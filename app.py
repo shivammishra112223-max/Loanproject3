@@ -22,28 +22,28 @@ model = joblib.load("loan_model.pkl")
 model_columns = joblib.load("model_columns.pkl")
 
 # -------------------------------
-# SAFE DB CONNECTION
+# DATABASE CONNECTION
 # -------------------------------
 conn = None
 cur = None
 
 try:
-    if psycopg2:
-        DATABASE_URL = os.environ.get("DATABASE_URL")
 
-        if DATABASE_URL:
-            if DATABASE_URL.startswith("postgres://"):
-                DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    conn = psycopg2.connect(
+        host="localhost",
+        database="LoanPridiction",
+        user="postgres",
+        password="shivam%8320"
+    )
 
-            conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-            cur = conn.cursor()
+    cur = conn.cursor()
 
-            print("✅ Database Connected Successfully")
-        else:
-            print("❌ No DATABASE_URL found")
+    print("✅ Database Connected Successfully")
 
 except Exception as e:
+
     print("❌ DB Error:", e)
+
     conn = None
     cur = None
 
@@ -55,16 +55,18 @@ def login():
     return render_template("login.html")
 
 # -------------------------------
-# REGISTER (FIXED)
+# REGISTER
 # -------------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
+
     if request.method == "POST":
 
         if not cur:
             return "Database not connected"
 
         try:
+
             full_name = request.form.get("full_name")
             username = request.form.get("username")
             email = request.form.get("email")
@@ -75,42 +77,65 @@ def register():
             hashed_password = generate_password_hash(password)
 
             cur.execute("""
-                INSERT INTO register_users
+                INSERT INTO Register_Users
                 (full_name, username, email, mobile, password, city)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (full_name, username, email, mobile, hashed_password, city))
+            """, (
+                full_name,
+                username,
+                email,
+                mobile,
+                hashed_password,
+                city
+            ))
 
             conn.commit()
+
             print("✅ DATA INSERTED")
 
-            return redirect(url_for("login"))
+            # SIGNUP KE BAAD LOGIN PAGE
+            return redirect("/")
 
         except Exception as e:
+
             if conn:
                 conn.rollback()
+
             print("❌ INSERT ERROR:", e)
+
             return f"Error: {e}"
 
-    return render_template("register.html")
+    return render_template("sinnup.html")
 
 # -------------------------------
 # LOGIN PROCESS
 # -------------------------------
 @app.route("/login", methods=["POST"])
 def login_process():
+
     if not cur:
         return "Database not connected"
 
     username = request.form.get("username")
     password = request.form.get("password")
 
-    cur.execute("SELECT password FROM register_users WHERE username = %s", (username,))
+    cur.execute(
+        "SELECT password FROM Register_Users WHERE username = %s",
+        (username,)
+    )
+
     user = cur.fetchone()
 
     if user and check_password_hash(user[0], password):
+
         return redirect(url_for("dashboard"))
+
     else:
-        return render_template("login.html", error="Invalid Username or Password")
+
+        return render_template(
+            "login.html",
+            error="Invalid Username or Password"
+        )
 
 # -------------------------------
 # DASHBOARD
@@ -167,15 +192,36 @@ def apply_loan():
     bank = request.form.get("bank")
 
     try:
+
         if cur:
+
             cur.execute("""
                 INSERT INTO users
-                (full_name, dob, gender, mobile, email, marital_status, address,
-                 pan, aadhaar, employment_type, company_name, experience, monthly_income)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,
-                        %s,%s,%s,%s,%s,%s)
+                (
+                    full_name,
+                    dob,
+                    gender,
+                    mobile,
+                    email,
+                    marital_status,
+                    address,
+                    pan,
+                    aadhaar,
+                    employment_type,
+                    company_name,
+                    experience,
+                    monthly_income
+                )
+
+                VALUES
+                (
+                    %s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s
+                )
+
                 RETURNING user_id
             """, (
+
                 request.form.get("full_name"),
                 request.form.get("dob"),
                 request.form.get("gender"),
@@ -189,6 +235,7 @@ def apply_loan():
                 request.form.get("company_name"),
                 request.form.get("experience"),
                 request.form.get("monthly_income")
+
             ))
 
             user_id = cur.fetchone()[0]
@@ -201,45 +248,68 @@ def apply_loan():
         cibil_score = int(request.form.get("cibil_score", 700))
 
         existing_value = request.form.get("existing_loan")
-        existing_loans = 1 if existing_value in ["1", "Yes", "yes"] else 0
+
+        existing_loans = 1 if existing_value in [
+            "1",
+            "Yes",
+            "yes"
+        ] else 0
 
         new_user = pd.DataFrame({
+
             "monthly_income": [monthly_income],
             "loan_amount": [loan_amount],
             "tenure": [tenure],
             "cibil_score": [cibil_score],
             "employment_type": [employment_type],
             "existing_loans": [existing_loans]
+
         })
 
         new_user = pd.get_dummies(new_user)
-        new_user = new_user.reindex(columns=model_columns, fill_value=0)
+
+        new_user = new_user.reindex(
+            columns=model_columns,
+            fill_value=0
+        )
 
         prediction = model.predict(new_user)
+
         probability = model.predict_proba(new_user)[0][1] * 100
 
-        loan_decision = "APPROVED" if prediction[0] == 1 else "REJECTED"
+        loan_decision = (
+            "APPROVED"
+            if prediction[0] == 1
+            else "REJECTED"
+        )
 
         if conn:
             conn.commit()
 
         return jsonify({
+
             "status": "SUCCESS",
             "bank": bank,
             "loan_decision": loan_decision,
             "probability": round(probability, 2)
+
         })
 
     except Exception as e:
+
         if conn:
             conn.rollback()
-        return jsonify({"status": "ERROR", "message": str(e)})
+
+        return jsonify({
+
+            "status": "ERROR",
+            "message": str(e)
+
+        })
 
 # -------------------------------
 # RUN APP
 # -------------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-    
-    
+
+    app.run(debug=True)
