@@ -28,9 +28,11 @@ conn = None
 cur = None
 
 try:
-    DATABASE_URL = os.environ.get("postgresql://loanpredictiondb_user:yvZHr9wcYQaQ3hpDPl3KbC7Oo8mavjnQ@dpg-d8a28o4m0tmc739n1sc0-a.singapore-postgres.render.com/loanpredictiondb")
+    DATABASE_URL = os.environ.get("DATABASE_URL")
 
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(DATABASE_URL,
+                            sslmode="require"
+                            )
 
     cur = conn.cursor()
 
