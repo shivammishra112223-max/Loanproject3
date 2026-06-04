@@ -3,6 +3,9 @@ import os
 import pandas as pd
 import joblib
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Optional DB import (safe)
 try:
@@ -29,10 +32,12 @@ cur = None
 
 try:
     DATABASE_URL = os.environ.get("DATABASE_URL")
+    print("DATABASE_URL =", DATABASE_URL)
 
     conn = psycopg2.connect(DATABASE_URL,
                             sslmode="require"
                             )
+    
 
     cur = conn.cursor()
 
@@ -144,6 +149,49 @@ def login_process():
 @app.route("/dashboard")
 def dashboard():
     return render_template("index.html")
+
+@app.route("/eligibility")
+def eligibility():
+    return render_template("eligibility.html")
+
+@app.route("/check_eligibility", methods=["POST"])
+def check_eligibility():
+
+    income = int(request.form["income"])
+    credit_score = int(request.form["credit_score"])
+    age = int(request.form["age"])
+    loan_amount = int(request.form["loan_amount"])
+
+    if income >= 30000 and credit_score >= 650 and age >= 18:
+
+        return f"""
+        <h1>✅ Eligible For Loan</h1>
+
+        <p>Income: ₹{income}</p>
+
+        <p>Credit Score: {credit_score}</p>
+
+        <a href='/dashboard'>
+            Apply Loan
+        </a>
+        """
+
+    else:
+
+        return f"""
+        <h1>❌ Not Eligible</h1>
+
+        <p>Improve Income or Credit Score</p>
+
+        <a href='/eligibility'>
+            Check Again
+        </a>
+        """
+
+
+
+
+
 
 # -------------------------------
 # LOAN PAGES
