@@ -312,3 +312,6 @@ def apply_loan():
 if __name__ == "__main__":
 
     app.run(debug=True)
+    
+    
+print("welcom to user")    
