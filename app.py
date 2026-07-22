@@ -83,7 +83,7 @@ def register():
             hashed_password = generate_password_hash(password)
 
             cur.execute("""
-                INSERT INTO register_users
+                INSERT INTO Register_Users
                 (full_name, username, email, mobile, password, city)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (
@@ -126,7 +126,7 @@ def login_process():
     password = request.form.get("password")
 
     cur.execute(
-        "SELECT password FROM register_users WHERE username = %s",
+        "SELECT password FROM Register_Users WHERE username = %s",
         (username,)
     )
 
