@@ -126,7 +126,7 @@ def login_process():
     password = request.form.get("password")
 
     cur.execute(
-        "SELECT password FROM Register_Users WHERE username = %s",
+        "SELECT password FROM register_users WHERE username = %s",
         (username,)
     )
 
